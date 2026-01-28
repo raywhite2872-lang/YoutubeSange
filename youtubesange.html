@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyTube</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:sans-serif}
+
+/* MENU */
+.menu{
+  display:flex;
+  justify-content:space-around;
+  background:#111;
+  padding:12px 0;
+}
+.menu button{
+  background:none;
+  border:none;
+  color:#aaa;
+  font-size:16px;
+}
+.menu button.active{
+  color:#fff;
+  border-bottom:2px solid #ff0000;
+}
+
+/* SHORTS */
+.shorts{
+  height:calc(100vh - 48px);
+  overflow-y:auto;
+  scroll-snap-type:y mandatory;
+}
+.short{
+  height:100%;
+  scroll-snap-align:start;
+  position:relative;
+}
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+.overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.4);
+  z-index:5;
+}
+
+/* VIDEO BIASA */
+.videos{
+  display:none;
+  padding:10px;
+}
+.card{
+  margin-bottom:18px;
+}
+.video-wrap{
+  position:relative;
+}
+video{
+  width:100%;
+  background:#000;
+  object-fit:contain;
+  border-radius:10px;
+}
+.rotate{
+  position:absolute;
+  bottom:8px;
+  right:8px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  font-size:12px;
+}
+.title{
+  margin-top:6px;
+  font-size:14px;
+  color:#ddd;
+}
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+<div class="menu">
+  <button id="btnShorts" class="active">Shorts</button>
+  <button id="btnVideo">Video</button>
+</div>
+
+<!-- SHORTS -->
+<div class="shorts" id="shorts"></div>
+
+<!-- VIDEO -->
+<div class="videos" id="videos">
+
+  <div class="card">
+    <div class="video-wrap">
+      <video controls poster="https://via.placeholder.com/1280x720?text=Video+1"
+        src="https://files.catbox.moe/fx9id6.mp4"></video>
+      <button class="rotate">⟳</button>
+    </div>
+    <div class="title">Video 1</div>
+  </div>
+
+  <div class="card">
+    <div class="video-wrap">
+      <video controls poster="https://via.placeholder.com/1280x720?text=Video+2"
+        src="https://files.catbox.moe/kgu284.mp4"></video>
+      <button class="rotate">⟳</button>
+    </div>
+    <div class="title">Video 2</div>
+  </div>
+
+  <div class="card">
+    <div class="video-wrap">
+      <video controls poster="https://via.placeholder.com/1280x720?text=Video+3"
+        src="https://files.catbox.moe/pfzrgw.mp4"></video>
+      <button class="rotate">⟳</button>
+    </div>
+    <div class="title">Video 3</div>
+  </div>
+
+  <div class="card">
+    <div class="video-wrap">
+      <video controls poster="https://via.placeholder.com/1280x720?text=Video+4"
+        src="https://files.catbox.moe/7ir3vi.mp4"></video>
+      <button class="rotate">⟳</button>
+    </div>
+    <div class="title">Video 4</div>
+  </div>
+
+  <div class="card">
+    <div class="video-wrap">
+      <video controls poster="https://via.placeholder.com/1280x720?text=Video+5"
+        src="https://files.catbox.moe/8y82rp.mp4"></video>
+      <button class="rotate">⟳</button>
+    </div>
+    <div class="title">Video 5</div>
+  </div>
+
+</div>
+
+<script>
+/* ===== MENU ===== */
+const shortsEl=document.getElementById("shorts");
+const videosEl=document.getElementById("videos");
+const btnS=document.getElementById("btnShorts");
+const btnV=document.getElementById("btnVideo");
+
+function stopAll(){
+  document.querySelectorAll("video").forEach(v=>v.pause());
+  document.querySelectorAll("iframe").forEach(i=>i.src="");
+}
+
+btnS.onclick=()=>{
+  stopAll();
+  shortsEl.style.display="block";
+  videosEl.style.display="none";
+  btnS.classList.add("active");
+  btnV.classList.remove("active");
+}
+btnV.onclick=()=>{
+  stopAll();
+  shortsEl.style.display="none";
+  videosEl.style.display="block";
+  btnV.classList.add("active");
+  btnS.classList.remove("active");
+}
+
+/* ===== SHORTS ===== */
+const ids=[
+"640rol","s0l18s","pkn0sf","c8lbec","77mpbt",
+"t5jhb7","27x6f4","pm3nls","xqmddr","utzc3h"
+];
+
+let audioUnlocked=false;
+
+ids.forEach(id=>{
+  shortsEl.innerHTML+=`
+  <div class="short">
+    <iframe data-id="${id}" src=""></iframe>
+    <div class="overlay">Tap untuk mulai</div>
+  </div>`;
+});
+
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    const iframe=e.target.querySelector("iframe");
+    if(e.isIntersecting && audioUnlocked){
+      iframe.src=`https://streamable.com/e/${iframe.dataset.id}?autoplay=1`;
+    }else{
+      iframe.src="";
+    }
+  });
+},{threshold:.7});
+
+document.querySelectorAll(".short").forEach(s=>io.observe(s));
+
+document.addEventListener("click",()=>{
+  if(audioUnlocked) return;
+  audioUnlocked=true;
+  document.querySelectorAll(".overlay").forEach(o=>o.remove());
+  const first=document.querySelector(".short iframe");
+  if(first) first.src=`https://streamable.com/e/${first.dataset.id}?autoplay=1`;
+});
+
+/* ===== ONLY 1 VIDEO PLAY ===== */
+const videos=document.querySelectorAll("video");
+videos.forEach(v=>{
+  v.addEventListener("play",()=>{
+    videos.forEach(o=>{
+      if(o!==v) o.pause();
+    });
+  });
+});
+
+/* ===== ROTATE ===== */
+document.querySelectorAll(".rotate").forEach(btn=>{
+  btn.onclick=e=>{
+    const video=e.target.previousElementSibling;
+    if(video.requestFullscreen) video.requestFullscreen();
+    else if(video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+  };
+});
+</script>
+
+</body>
+</html>
